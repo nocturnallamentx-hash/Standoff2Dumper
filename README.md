@@ -82,15 +82,18 @@ Then generate the DLLs from the manifest (see `HuaweiDummyAssemblyExporter`).
 
 ## Credits
 
-Original project & protected-metadata research:
-
-- Project website: **axent.cc**
-- Developed & supported by **Bibizyanov**, **Alogen**
-- Telegram community: [@pub_Dumper](https://t.me/pub_Dumper)
-- Built on top of [Perfare's Il2CppDumper](https://github.com/Perfare/Il2CppDumper)
-
-v1.1.0 update (offline Huawei dumper, record layouts, DummyDLL pipeline):
+This v1.1.0 fork (offline Huawei dumper, record layouts, DummyDLL pipeline):
 **nocturnallamentx-hash**
+
+### Contact / Community
+
+- Telegram group: *TODO: add your group link here*
+- WhatsApp group: *TODO: add your group link here*
+
+### Original project
+
+This build is based on the protected-metadata research of the original
+Standoff 2 dumper project and [Perfare's Il2CppDumper](https://github.com/Perfare/Il2CppDumper).
 
 ## License
 
