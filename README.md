@@ -87,8 +87,8 @@ This v1.1.0 fork (offline Huawei dumper, record layouts, DummyDLL pipeline):
 
 ### Contact / Community
 
-- Telegram group: *TODO: add your group link here*
-- WhatsApp group: *TODO: add your group link here*
+- Telegram group: [t.me/n0cDll](https://t.me/n0cDll)
+- WhatsApp group: [JjJrvkd7l3ZLaXM6RewKVg](https://chat.whatsapp.com/JjJrvkd7l3ZLaXM6RewKVg?s=cl&p=a&iam=2)
 
 ### Original project
 
