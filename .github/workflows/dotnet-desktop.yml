@@ -1,0 +1,44 @@
+name: .NET Core Desktop
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+        framework: [net6.0, net7.0]
+
+    runs-on: windows-latest 
+
+    env:
+      Solution_Name: Il2CppDumper.sln 
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Restore the application
+      run: dotnet restore ${{ env.Solution_Name }}
+
+    - name: Build and Publish
+      run: dotnet publish Il2CppDumper/Il2CppDumper.csproj -c ${{ matrix.configuration }} -f ${{ matrix.framework }} -o ./publish/${{ matrix.framework }}
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: Il2CppDumper-Build-${{ matrix.configuration }}-${{ matrix.framework }}
+        path: ./publish/${{ matrix.framework }}
