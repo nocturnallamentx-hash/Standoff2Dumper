@@ -196,7 +196,7 @@ class Dump:
                     self.valuetypes.add(di)
         for di in self.valuetypes:
             t = self.typedefs[di]
-            if t['fc'] == 1 and 0 <= t['fs'] < COUNTS[3]:
+            if t['fc'] >= 1 and 0 <= t['fs'] < COUNTS[3]:
                 fa = FIELDS + (t['fs']) * 12
                 try:
                     if self.text(e.u32(fa)) == 'value__':
@@ -348,9 +348,8 @@ class Dump:
         parms = []
         for k in range(n):
             pa = PARAMS + (start + k) * 12
-            pt = e.u32(pa + 0)
-            pn = self.text(e.u32(pa + 4))
-            parms.append((self.typename(pt), pn or 'p' + str(k)))
+            pt = e.u32(pa + 4)
+            parms.append((self.typename(pt), 'p' + str(k)))
         return {
             'name': self.text(e.u32(a + 18)),
             'token': token,
@@ -441,8 +440,12 @@ class Dump:
         sp = out / 'script.json'
         scripts = 0
         mf = (out / 'huawei.manifest.jsonl').open('w', encoding='utf-8', newline='\n') if manifest else None
-        with fp.open('w', encoding='utf-8', newline='\n') as w, sp.open('w', encoding='utf-8', newline='\n') as sj:
+        with fp.open('w', encoding='utf-8', newline='\n') as w, sp.open('w', encoding='utf-8', newline='\n') as sj, (out / 'functions.cs').open('w', encoding='utf-8', newline='\n') as fm:
             sj.write('{"ScriptMethod":[')
+            fm.write('// Standoff 2 v1.1.0 - Function Map (modding reference)\n')
+            fm.write('// libunity.so sha256: ' + VERSION + '\n')
+            fm.write('// Format: // RVA:0x<addr> Offset:0x<fileoff>  Namespace.Class::Method(argTypes) : ReturnType\n')
+            fm.write('// Grep a name to find its RVA; grep an RVA:0x value to identify a function.\n\n')
             if wm and wm.get('Fingerprint'):
                 w.write('// ' + wm.get('Brand', 'axent.cc') + ' | ' + wm['Fingerprint'].replace('-', '')[:8] + '\n')
             for i, (name, start, count) in enumerate(self.images):
@@ -453,6 +456,7 @@ class Dump:
                 if mf:
                     mf.write(json.dumps({'image': im}, ensure_ascii=False, separators=(',', ':')) + '\n')
                 mod = self.mods.get(im)
+                fm.write('\n// ===== Image %d: %s =====\n' % (image_num, im))
                 for tid in range(start, start + count):
                     t = self.typedefs[tid]
                     w.write('\n// Namespace: ' + t['ns'] + '\n')
@@ -526,6 +530,8 @@ class Dump:
                         addr = method['rva']
                         off = method['offset']
                         w.write(f'\n\t// RVA: 0x{addr:X} Offset: 0x{off:X} VA: 0x{addr:X}\n\t{sig} {{ }}\n')
+                        cls = (t['ns'] + '.' if t['ns'] else '') + t['name']
+                        fm.write('// RVA:0x%X Offset:0x%X  %s::%s(%s) : %s\n' % (addr, off, cls, mname, ', '.join(p[0] for p in method['params']), method['rtype']))
                         if addr:
                             fullname = (t['ns'] + '.' if t['ns'] else '') + t['name'] + '$$' + method['name']
                             js = {'Address': addr, 'Name': fullname, 'Signature': sig, 'TypeSignature': ''}
