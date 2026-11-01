@@ -137,8 +137,9 @@ class Dump:
         self.tybase = TYBASE
         if not e.has(self.tybase, 8):
             raise ValueError('Invalid Il2CppType base')
-        if not e.has(OFFSETS, 4 * COUNTS[3]):
-            raise ValueError('Invalid field offset table')
+        if not e.has(METAREG + 0x30, 8):
+            raise ValueError('Invalid MetadataRegistration fieldOffsets slot')
+        self.fieldoff_tbl = 0
 
     def text(self, index):
         if index < 0:
@@ -151,6 +152,9 @@ class Dump:
 
     def setup(self):
         e = self.e
+        self.fieldoff_tbl = e.ptr(METAREG + 0x30)
+        if not self.fieldoff_tbl or not e.has(self.fieldoff_tbl, 8):
+            raise ValueError('Invalid fieldOffsets pointer table')
         run = 0
         for i in range(COUNTS[0]):
             a = IMAGES + i * 36
@@ -215,7 +219,11 @@ class Dump:
             base = self.mods.get(im)
             if not base:
                 continue
-            mstart = self.typedefs[start]['ms'] if self.typedefs[start]['ms'] >= 0 else -1
+            mstart = -1
+            for k in range(count):
+                if self.typedefs[start + k]['mc'] > 0:
+                    mstart = self.typedefs[start + k]['ms']
+                    break
             if mstart < 0:
                 continue
             mc_total = sum(self.typedefs[start + k]['mc'] for k in range(count))
@@ -313,12 +321,14 @@ class Dump:
         if count == 0:
             return None
         e = self.e
-        gfi = self.typedefs[ti]['fs'] + ix
-        if gfi < 0 or not e.has(OFFSETS + 4 * gfi, 4):
+        tbl = e.ptr(self.fieldoff_tbl + 8 * ti)
+        if not tbl or ix < 0 or not e.has(tbl + 4 * ix, 4):
             return None
-        n = e.i32(OFFSETS + 4 * gfi)
+        n = e.i32(tbl + 4 * ix)
         if n < 0 or n > 0x1000000:
             return None
+        if n > 0 and n >= 16 and ti in self.valuetypes:
+            n -= 16
         self.field_count += 1
         return n
 
@@ -416,10 +426,10 @@ class Dump:
         if count == 0:
             return None
         e = self.e
-        gfi = self.typedefs[ti]['fs'] + ix
-        if gfi < 0 or not e.has(OFFSETS + 4 * gfi, 4):
+        tbl = e.ptr(self.fieldoff_tbl + 8 * ti)
+        if not tbl or ix < 0 or not e.has(tbl + 4 * ix, 4):
             return None
-        v = e.i32(OFFSETS + 4 * gfi)
+        v = e.i32(tbl + 4 * ix)
         return v if 0 <= v <= 0x1000000 else None
 
     def run(self, out, binary, header=False, wm=None, manifest=False):
